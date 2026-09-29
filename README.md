@@ -1,4 +1,3 @@
-# practica-wifi-segura
 ```
 # Reporte de Auditoría: Seguridad en Redes Wi-Fi Públicas
 
