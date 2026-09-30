@@ -1,56 +1,66 @@
 # Reporte de Auditoría: Seguridad en Redes Wi-Fi Públicas
 
-**Estudiante:** Lautaro Williams **Rol:** Auditor de Seguridad Junior **Materia:** Ciberseguridad – Pre-Entrega 6 **Fecha:** Septiembre 2026
+**Estudiante:** Lautaro Williams  
+**Rol:** Auditor de Seguridad Junior  
+**Materia:** Ciberseguridad – Pre-Entrega 6  
+**Fecha:** Septiembre 2026  
 
 ---
 
-## 1\. Introducción y Sitio Analizado
+## 1. Introducción y Sitio Analizado
+En este informe de auditoría se evalúan las vulnerabilidades y riesgos de seguridad asociados al tráfico no cifrado en redes Wi-Fi públicas o abiertas (ej. cafeterías, aeropuertos). Como auditor de seguridad junior, se analizó el comportamiento de la capa de aplicación e inspecionó la exposición de datos al interactuar con un sitio web sin HTTPS.
 
-En este informe se evalúan los riesgos de seguridad asociados a la navegación en redes Wi-Fi públicas no protegidas. Como auditor de seguridad junior, se analizó el comportamiento del tráfico generado al ingresar a un sitio web sin cifrado desde un navegador.
-
-* **Sitio analizado:** http://neverssl.com
-* **Objetivo:** Identificar la exposición de datos en tránsito y fundamentar la necesidad de mecanismos de cifrado a nivel de red (VPN).
-
----
-
-## 2\. Evidencia Observada (Herramientas de Desarrollador - F12)
-
-Al inspeccionar la solicitud mediante la pestaña **Network (Red)** de las herramientas de desarrollador, se registraron los siguientes parámetros de red:
-
-* **URL solicitada:** http://neverssl.com
-* **Método HTTP:** GET
-* **Host:** neverssl.com
-* **Protocolo utilizado:** HTTP (sin cifrar)
-* **Headers enviados:** User-Agent (detalla navegador, sistema operativo y cliente).
-
-**Observación técnica:** La comunicación se realizó en texto plano sin ninguna capa de transporte seguro (TLS/SSL), dejando los metadatos y la navegación completamente visibles en el cable/aire de la red.
-
-<img width="1920" height="1035" alt="03" src="https://github.com/user-attachments/assets/9d163b21-c673-437f-9dfa-1c717a566a4d" />
+* **Sitio analizado:** `http://neverssl.com` (sitio diseñado deliberadamente sin TLS para evitar el bloqueo de portales cautivos).
+* **Objetivo técnico:** Identificar la exposición de metadatos y contenido en tránsito, demostrando la necesidad de implementar mecanismos de cifrado de red como una **VPN (Virtual Private Network)**.
 
 ---
 
-## 3\. Riesgos de Seguridad en Wi-Fi Pública
+## 2. Evidencia Observada y Análisis de Cabeceras (DevTools - F12)
 
-Navegar en redes abiertas (cafeterías, aeropuertos) mediante el protocolo inseguro HTTP expone la conexión a múltiples vectores de ataque:
+Al inspeccionar la solicitud mediante las herramientas de desarrollador del navegador (**Pestaña Network / Red**), se capturaron los siguientes parámetros de red reales:
 
-1. **Intercepción de Datos (Sniffing):** Un atacante conectado a la misma red puede usar analizadores de tráfico (como Wireshark) para capturar los paquetes de datos transmitidos y leer en texto claro información confidencial o credenciales.
-2. **Ataques de Intermediario (Man-in-the-Middle - MitM):** Un cibercriminal puede interponerse entre el dispositivo del usuario y el router de la cafetería, alterando la información transmitida o redirigiendo al usuario a sitios fraudulentos.
-3. **Redes Gemelas Malignas (Evil Twins):** Creación de un punto de acceso Wi-Fi falso con el mismo nombre del local para atraer usuarios y capturar todo su tráfico de red.
+* **Request URL:** `http://oldslowlushstars.neverssl.com/online/`
+* **Request Method:** `GET`
+* **Status Code:** `200 OK`
+* **Remote Address (IP/Puerto):** `[2600:1f13:37c:1400:ba21:7165:5fc7:736e]:80`
+* **Host Header:** `oldslowlushstars.neverssl.com`
+* **User-Agent Header:** `Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/154.0.0.0 Safari/537.36`
+* **Protocolo:** `HTTP/1.1` (no cifrado / texto claro)
+
+### Evidencia Capturada:
+<img width="1920" height="1035" alt="03" src="https://github.com/user-attachments/assets/61aa5a93-6da9-402b-a201-d5005cf922dd" />
+
+
+&gt; **Diagnóstico técnico de auditoría:** La comunicación carece por completo de la capa de transporte seguro (TLS/SSL). Los encabezados HTTP y el cuerpo de la respuesta viajan en texto claro por el aire de la red local, siendo susceptibles de interceptación pasiva o manipulación activa.
 
 ---
 
-## 4\. Protección mediante Red Privada Virtual (VPN)
+## 3. Vectores de Ataque y Riesgos en Wi-Fi Pública
 
-Al activar una VPN en una red Wi-Fi pública, el escenario de riesgo cambia radicalmente:
+Navegar mediante el protocolo HTTP en un entorno de red compartido expone al usuario a diversos vectores de amenaza:
 
-* **Túnel Seguro y Encapsulamiento:** La VPN crea un túnel cifrado de extremo a extremo que encapsula todo el tráfico enviado desde el dispositivo hacia el servidor de la VPN.
-* **Cifrado de Datos:** Aunque un atacante realice sniffing o se conecte a la misma Wi-Fi, solo capturará paquetes con ruido ininteligible debido al cifrado robusto.
-* **Privacidad de IP y Ubicación:** La dirección IP real del usuario queda oculta, reemplazándose por la IP del servidor VPN, evitando el rastreo de actividad e IP por parte del proveedor local y sitios de destino.
+1. **Intercepción Pasiva de Datos (Sniffing):** Cualquier actor malicioso en la misma red Wi-Fi puede colocar su interfaz en modo promiscuo y utilizar herramientas como Wireshark para capturar tramas de red, leyendo credenciales, *cookies* de sesión y formularios ingresados.
+2. **Ataques de Intermediario (Man-in-the-Middle - MitM) y ARP Spoofing:** El atacante envenena las tablas ARP de la red local para posicionarse entre el dispositivo de la víctima y el gateway/router, interceptando o alterando el tráfico en tiempo real.
+3. **Robo de Sesión (Session Hijacking):** La falta de cifrado permite extraer *tokens* de autenticación y *cookies*, permitiendo al atacante suplantar la identidad de la víctima en la plataforma web.
+4. **Riesgo de Movimiento Lateral:** Una vez comprometida la sesión o credenciales en la red pública, el atacante puede intentar el pívot o movimiento lateral hacia cuentas institucionales o bancarias vinculadas que compartan patrones de contraseña o correo.
+5. **Redes Gemelas Malignas (Evil Twins):** Creación de un punto de acceso Wi-Fi falso con un SSID idéntico al del establecimiento comercial para redirigir todo el tráfico a servidores controlados por el atacante.
 
 ---
 
-## 5\. Las 3 Reglas de Oro para Redes Wi-Fi Públicas
+## 4. Mitigación y Protección mediante Red Privada Virtual (VPN)
 
-1. **Usar siempre una VPN activa:** Activar el túnel cifrado antes de conectarte o realizar cualquier tipo de navegación en redes públicas o abiertas.
-2. **Navegar exclusivamente por sitios HTTPS:** Verificar que los sitios tengan el candado de seguridad y el protocolo https:// activo antes de ingresar datos.
-3. **Evitar transacciones sensibles:** No acceder a home banking, billeteras virtuales o correo institucional cuando estés conectado a redes Wi-Fi públicas compartidas.
+Al implementar una VPN sobre la conexión en una red Wi-Fi pública, el perfil de riesgo cambia sustancialmente:
+
+* **Túnel de Encapsulamiento Cifrado:** La VPN encapsula todo el tráfico IP del dispositivo dentro de un túnel cifrado (utilizando algoritmos robustos como AES-256 o ChaCha20) desde el cliente hacia el servidor VPN.
+* **Inviolabilidad ante Sniffing Local:** Aunque un atacante capture los paquetes en el aire de la red Wi-Fi, solo obtendrá tramas de datos cifrados (*ruido ininteligible*), preservando la **Confidencialidad** y la **Integridad** de la información.
+* **Ocultamiento de IP y Anonimización:** La dirección IP pública del usuario es reemplazada por la IP del servidor VPN, impidiendo el rastreo geográfico y bloqueando perfilamientos por parte de terceros o proveedores ISP locales.
+
+---
+
+## 5. Las 3 Reglas de Oro para Navegación en Redes Abiertas
+
+1. **Usar siempre una VPN activa con Kill Switch:** Establecer el túnel cifrado antes de conectarse a cualquier red pública y verificar que la función *Kill Switch* esté habilitada para evitar fugas de datos si la VPN se desconecta.
+2. **Exigir conexiones HTTPS y HSTS:** Verificar la presencia del candado digital y asegurarse de que los sitios web operen con protocolo seguro. Si aparece una advertencia de certificado o sitio no seguro, interrumpir la navegación.
+3. **Cero Operaciones Sensibles y Deshabilitar Conexión Automática:** Evitar el acceso a plataformas de *Home Banking*, billeteras virtuales o correo institucional en Wi-Fi públicas. Asimismo, desactivar en el dispositivo la opción de "conectarse automáticamente a redes abiertas".
+
+```
