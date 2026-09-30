@@ -25,6 +25,8 @@ Al inspeccionar la solicitud mediante la pestaña **Network (Red)** de las herra
 
 **Observación técnica:** La comunicación se realizó en texto plano sin ninguna capa de transporte seguro (TLS/SSL), dejando los metadatos y la navegación completamente visibles en el cable/aire de la red.
 
+<img width="1920" height="1035" alt="03" src="https://github.com/user-attachments/assets/9d163b21-c673-437f-9dfa-1c717a566a4d" />
+
 ---
 
 ## 3\. Riesgos de Seguridad en Wi-Fi Pública
